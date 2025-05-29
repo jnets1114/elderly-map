@@ -31,6 +31,16 @@
       background: #007bff;
     }
     #shareBtn:hover, #formBtn:hover { opacity: 0.8; cursor: pointer; }
+
+    .popup-content {
+      line-height: 1.6;
+      font-size: 16px;
+    }
+    .popup-distance {
+      font-weight: bold;
+      color: #d9534f;
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
@@ -71,7 +81,7 @@
       const userLat = map.getCenter().lat;
       const userLng = map.getCenter().lng;
       const dist = distance(userLat, userLng, lat, lng);
-      const min = Math.round((dist / 4) * 60); // 徒歩=時速4km
+      const min = Math.round((dist / 4) * 60);
       return {
         address: info['住所'] || 'まだ情報がありません。',
         tel: info['電話番号'] || 'まだ情報がありません。',
@@ -100,16 +110,16 @@
       filtered.forEach(m => {
         const icon = L.divIcon({ className: 'custom-icon', html: `<div style="font-size:24px;">${genreIcons[m.genre] || '📍'}</div>` });
         const info = displayInfo(m.values, m.lat, m.lng);
-        const popup = `<strong>${m.name}</strong><br>${m.genre}<br><br>
+        const popup = `<div class='popup-content'><strong>${m.name}</strong><br>${m.genre}<br><br>
           住所：${info.address}<br>
           電話：${info.tel}<br>
           営業時間：${info.hours}<br>
           定休日：${info.closed}<br>
           ${info.homepage}<br>
           コメント：${info.comment}<br>
-          現在地からの距離：${info.distance}<br><br>
+          <div class='popup-distance'>📍 現在地からの距離：${info.distance}</div><br>
           <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}&travelmode=walking" target="_blank">🚶 徒歩でナビ</a><br>
-          <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}&travelmode=driving" target="_blank">🚗 車でナビ</a>`;
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}&travelmode=driving" target="_blank">🚗 車でナビ</a></div>`;
         L.marker([m.lat, m.lng], { icon }).bindPopup(popup).addTo(markerGroup);
       });
     }
