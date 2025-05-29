@@ -7,12 +7,12 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
-    body { font-family: sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
-    #map { height: 90vh; width: 100%; }
+    body { font-family: sans-serif; background: #f5f5f5; margin: 0; padding: 0; font-size: 18px; }
+    #map { height: 85vh; width: 100%; }
     .filter-btns { text-align: center; margin: 10px 0; }
     .filter-btns button {
-      margin: 5px; padding: 8px 14px; font-size: 16px; border-radius: 8px;
-      border: none; background: #a0cfff; color: black; /* ジャンルボタンは淡い青 */
+      margin: 5px; padding: 10px 18px; font-size: 18px; border-radius: 10px;
+      border: none; background: #a0cfff; color: black;
     }
     .filter-btns button:hover { background: #6fbfff; cursor: pointer; }
 
@@ -20,21 +20,21 @@
       position: fixed;
       bottom: 20px;
       z-index: 1000;
-      padding: 8px 14px; font-size: 16px; border-radius: 8px; border: none; color: white;
+      padding: 10px 18px; font-size: 18px; border-radius: 10px; border: none; color: white;
     }
     #shareBtn {
       right: 20px;
-      background: #28a745; /* 緑 */
+      background: #28a745;
     }
     #formBtn {
       left: 20px;
-      background: #007bff; /* 青 */
+      background: #007bff;
     }
     #shareBtn:hover, #formBtn:hover { opacity: 0.8; cursor: pointer; }
   </style>
 </head>
 <body>
-  <h2 style="text-align:center;">日高地区 高齢者向け施設マップ</h2>
+  <h2 style="text-align:center; font-size: 24px;">日高地区 高齢者向け施設マップ</h2>
   <div class="filter-btns" id="filterArea"></div>
   <div id="map"></div>
   <button id="shareBtn">人に教える</button>
@@ -67,15 +67,31 @@
     let allMarkers = [];
     let markerGroup = L.layerGroup().addTo(map);
 
-    function displayInfo(info) {
+    function displayInfo(info, lat, lng) {
+      const userLat = map.getCenter().lat;
+      const userLng = map.getCenter().lng;
+      const dist = distance(userLat, userLng, lat, lng);
+      const min = Math.round((dist / 4) * 60); // 徒歩=時速4km
       return {
         address: info['住所'] || 'まだ情報がありません。',
         tel: info['電話番号'] || 'まだ情報がありません。',
         hours: info['営業時間'] || 'まだ情報がありません。',
         closed: info['定休日'] || 'まだ情報がありません。',
         homepage: info['ホームページ'] ? `<a href="${info['ホームページ']}" target="_blank">ホームページ</a>` : 'まだ情報がありません。',
-        comment: info['コメント'] || 'まだ情報がありません。'
+        comment: info['コメント'] || 'まだ情報がありません。',
+        distance: `${dist.toFixed(1)}km（徒歩 約${min}分）`
       };
+    }
+
+    function distance(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
     }
 
     function filterMarkers(genre) {
@@ -83,7 +99,7 @@
       const filtered = genre === 'すべて' ? allMarkers : allMarkers.filter(m => m.genre === genre);
       filtered.forEach(m => {
         const icon = L.divIcon({ className: 'custom-icon', html: `<div style="font-size:24px;">${genreIcons[m.genre] || '📍'}</div>` });
-        const info = displayInfo(m.values);
+        const info = displayInfo(m.values, m.lat, m.lng);
         const popup = `<strong>${m.name}</strong><br>${m.genre}<br><br>
           住所：${info.address}<br>
           電話：${info.tel}<br>
@@ -91,7 +107,9 @@
           定休日：${info.closed}<br>
           ${info.homepage}<br>
           コメント：${info.comment}<br>
-          <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}" target="_blank">➡️ ナビ開始（Googleマップ）</a>`;
+          現在地からの距離：${info.distance}<br><br>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}&travelmode=walking" target="_blank">🚶 徒歩でナビ</a><br>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}&travelmode=driving" target="_blank">🚗 車でナビ</a>`;
         L.marker([m.lat, m.lng], { icon }).bindPopup(popup).addTo(markerGroup);
       });
     }
