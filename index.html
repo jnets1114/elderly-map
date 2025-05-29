@@ -10,15 +10,27 @@
     body { font-family: sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
     #map { height: 90vh; width: 100%; }
     .filter-btns { text-align: center; margin: 10px 0; }
-    .filter-btns button, #shareBtn, #formBtn { margin: 5px; padding: 8px 14px; font-size: 16px; border-radius: 8px; border: none; background: #007b8f; color: white; }
-    .filter-btns button:hover, #shareBtn:hover, #formBtn:hover { background: #005f6b; cursor: pointer; }
+    .filter-btns button {
+      margin: 5px; padding: 8px 14px; font-size: 16px; border-radius: 8px;
+      border: none; background: #a0cfff; color: black; /* ジャンルボタンは淡い青 */
+    }
+    .filter-btns button:hover { background: #6fbfff; cursor: pointer; }
+
     #shareBtn, #formBtn {
       position: fixed;
       bottom: 20px;
       z-index: 1000;
+      padding: 8px 14px; font-size: 16px; border-radius: 8px; border: none; color: white;
     }
-    #shareBtn { right: 20px; }
-    #formBtn { left: 20px; }
+    #shareBtn {
+      right: 20px;
+      background: #28a745; /* 緑 */
+    }
+    #formBtn {
+      left: 20px;
+      background: #007bff; /* 青 */
+    }
+    #shareBtn:hover, #formBtn:hover { opacity: 0.8; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -78,7 +90,8 @@
           営業時間：${info.hours}<br>
           定休日：${info.closed}<br>
           ${info.homepage}<br>
-          コメント：${info.comment}`;
+          コメント：${info.comment}<br>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}" target="_blank">➡️ ナビ開始（Googleマップ）</a>`;
         L.marker([m.lat, m.lng], { icon }).bindPopup(popup).addTo(markerGroup);
       });
     }
