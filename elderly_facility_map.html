@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>日高地区 高齢者向け施設マップ</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    body { font-family: sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
+    #map { height: 90vh; width: 100%; }
+    .filter-btns { text-align: center; margin: 10px 0; }
+    .filter-btns button {
+      margin: 5px; padding: 8px 14px; font-size: 16px; border-radius: 8px;
+      border: none; background: #a0cfff; color: black; /* ジャンルボタンは淡い青 */
+    }
+    .filter-btns button:hover { background: #6fbfff; cursor: pointer; }
+
+    #shareBtn, #formBtn {
+      position: fixed;
+      bottom: 20px;
+      z-index: 1000;
+      padding: 8px 14px; font-size: 16px; border-radius: 8px; border: none; color: white;
+    }
+    #shareBtn {
+      right: 20px;
+      background: #28a745; /* 緑 */
+    }
+    #formBtn {
+      left: 20px;
+      background: #007bff; /* 青 */
+    }
+    #shareBtn:hover, #formBtn:hover { opacity: 0.8; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center;">日高地区 高齢者向け施設マップ</h2>
+  <div class="filter-btns" id="filterArea"></div>
+  <div id="map"></div>
+  <button id="shareBtn">人に教える</button>
+  <button id="formBtn" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSdJKVbxWMm9fVfd4MfdzsI_jvGvy_5Wwb6WodXpfQFiF8tZBg/viewform?usp=header', '_blank')">情報を投稿する</button>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([35.467222, 134.771509], 14);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    const genreIcons = {
+      '医療機関': '🏥',
+      '訪問看護ステーション': '🩺',
+      '高齢者福祉施設': '🧓',
+      'デイサービス': '🚐',
+      '福祉相談窓口': '📞',
+      '介護タクシー': '🚖',
+      '買い物': '🛍',
+      'ドラッグストア・薬局': '💊',
+      '公園': '🌳',
+      '猫カフェ': '🐱',
+      '多目的トイレ': '🚻',
+      '地区コミュニティセンター': '🏢',
+      'こども食堂': '🍽'
+    };
+
+    let allMarkers = [];
+    let markerGroup = L.layerGroup().addTo(map);
+
+    function displayInfo(info) {
+      return {
+        address: info['住所'] || 'まだ情報がありません。',
+        tel: info['電話番号'] || 'まだ情報がありません。',
+        hours: info['営業時間'] || 'まだ情報がありません。',
+        closed: info['定休日'] || 'まだ情報がありません。',
+        homepage: info['ホームページ'] ? `<a href="${info['ホームページ']}" target="_blank">ホームページ</a>` : 'まだ情報がありません。',
+        comment: info['コメント'] || 'まだ情報がありません。'
+      };
+    }
+
+    function filterMarkers(genre) {
+      markerGroup.clearLayers();
+      const filtered = genre === 'すべて' ? allMarkers : allMarkers.filter(m => m.genre === genre);
+      filtered.forEach(m => {
+        const icon = L.divIcon({ className: 'custom-icon', html: `<div style="font-size:24px;">${genreIcons[m.genre] || '📍'}</div>` });
+        const info = displayInfo(m.values);
+        const popup = `<strong>${m.name}</strong><br>${m.genre}<br><br>
+          住所：${info.address}<br>
+          電話：${info.tel}<br>
+          営業時間：${info.hours}<br>
+          定休日：${info.closed}<br>
+          ${info.homepage}<br>
+          コメント：${info.comment}<br>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}" target="_blank">➡️ ナビ開始（Googleマップ）</a>`;
+        L.marker([m.lat, m.lng], { icon }).bindPopup(popup).addTo(markerGroup);
+      });
+    }
+
+    function updateFilterButtons(genres) {
+      const container = document.getElementById('filterArea');
+      container.innerHTML = '<button onclick="filterMarkers(\'すべて\')">すべて</button>';
+      genres.forEach(genre => {
+        const btn = document.createElement('button');
+        btn.textContent = `${genreIcons[genre] || '📍'} ${genre}`;
+        btn.onclick = () => filterMarkers(genre);
+        container.appendChild(btn);
+      });
+    }
+
+    fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTzWbO0ClxE1SKe-w-3yy-Zik5MmSYrL5b2Vg5O9O04XC4e3WaPOuGqBKWNQNeKsaQ1J34W1VfxnVd8/pub?gid=675439036&single=true&output=csv')
+      .then(res => res.text())
+      .then(csv => {
+        const parsed = Papa.parse(csv, { header: true, skipEmptyLines: true });
+        const rows = parsed.data.filter(row => row['緯度（lat）'] && row['経度（lng）']);
+
+        const genreSet = new Set();
+
+        allMarkers = rows.map(row => {
+          const lat = parseFloat(row['緯度（lat）']);
+          const lng = parseFloat(row['経度（lng）']);
+          const genre = row['ジャンル'];
+          if (genre && genre.trim() !== '') genreSet.add(genre);
+          return { name: row['施設名'], genre, lat, lng, values: row };
+        }).filter(m => !isNaN(m.lat) && !isNaN(m.lng));
+
+        updateFilterButtons([...genreSet]);
+        filterMarkers('すべて');
+      });
+
+    document.getElementById('shareBtn').addEventListener('click', () => {
+      const dummy = document.createElement('input');
+      dummy.value = window.location.href;
+      document.body.appendChild(dummy);
+      dummy.select();
+      document.execCommand('copy');
+      document.body.removeChild(dummy);
+      alert('このページのリンクをコピーしました！');
+    });
+  </script>
+</body>
+</html>
