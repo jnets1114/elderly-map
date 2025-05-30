@@ -23,33 +23,28 @@
       height: 80vh;
       width: 100%;
     }
-    .search-container {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      padding: 10px;
-    }
-    #filterSelect, #searchInput {
+    #filterSelect, #searchInput, #searchBtn {
       font-size: 18px;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      margin: 5px;
     }
     #filterSelect {
-      width: 240px;
+      width: 48%;
+      margin: 10px 1% 10px 1%;
+      display: inline-block;
     }
     #searchInput {
-      width: 300px;
+      width: 40%;
+      margin: 10px 1% 10px 1%;
+      display: inline-block;
     }
     #searchBtn {
       background-color: #8b5e3c;
       color: white;
-      padding: 10px 20px;
-      font-size: 18px;
-      border-radius: 8px;
-      border: none;
-      margin: 5px;
+      width: 8%;
+      margin: 10px 1% 10px 0;
+      display: inline-block;
       cursor: pointer;
     }
     #shareBtn, #formBtn {
@@ -77,13 +72,11 @@
 </head>
 <body>
   <h2>日高地区 高齢者向け施設マップ</h2>
-  <div class="search-container">
-    <select id="filterSelect">
-      <option value="すべて">すべてのジャンル</option>
-    </select>
-    <input type="text" id="searchInput" placeholder="施設名で検索...">
-    <button id="searchBtn">検索</button>
-  </div>
+  <select id="filterSelect">
+    <option value="すべて">すべてのジャンル</option>
+  </select>
+  <input type="text" id="searchInput" placeholder="施設名で検索...">
+  <button id="searchBtn">検索</button>
   <div id="map"></div>
   <button id="shareBtn">人に教える</button>
   <button id="formBtn" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSdJKVbxWMm9fVfd4MfdzsI_jvGvy_5Wwb6WodXpfQFiF8tZBg/viewform?usp=header', '_blank')">情報を投稿する</button>
@@ -98,7 +91,7 @@
     }).addTo(map);
 
     const genreIcons = {
-      '医療機関': '🏥', '訪問看護ステーション': '🩺', '高齢者福祉施設': '🏡',
+      '医療機関': '🏥', '訪問看護ステーション': '◎看', '高齢者福祉施設': '🏡',
       'デイサービス': '🚐', '福祉相談窓口': '📞', '介護タクシー': '🚕',
       '買い物': '🛒', 'ドラッグストア・薬局': '💊', '公園': '🌲',
       '猫カフェ': '🐾', '多目的トイレ': '🚻', '地区コミュニティセンター': '🏘', 'こども食堂': '🍴'
@@ -121,7 +114,11 @@
     function renderMarkers(markers) {
       markerGroup.clearLayers();
       markers.forEach(m => {
-        const icon = L.divIcon({ className: 'custom-icon', html: `<div style="font-size:20px;">${genreIcons[m.genre] || '📍'}</div>` });
+        let iconHtml = `<div style="font-size:18px;">${genreIcons[m.genre] || '📍'}</div>`;
+        if (m.genre === '訪問看護ステーション') {
+          iconHtml = `<div style="font-size:14px; background:#fbc5d8; color:#5a3825; border:2px solid #8b5e3c; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-weight:bold;">看</div>`;
+        }
+        const icon = L.divIcon({ className: 'custom-icon', html: iconHtml });
         const info = displayInfo(m.values);
         const popup = `<div style='font-size:16px; line-height:1.8;'>
           <strong style='font-size:18px;'>${m.name}</strong><br>
