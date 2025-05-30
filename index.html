@@ -26,28 +26,32 @@
     .input-group {
       display: flex;
       justify-content: center;
+      align-items: center;
       flex-wrap: wrap;
       gap: 10px;
       margin: 10px;
     }
-    #filterSelect, #searchInput, #searchBtn {
+    #filterSelect, #searchInput {
       font-size: 18px;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
     }
     #filterSelect {
-      width: 48%;
+      width: 200px;
     }
     #searchInput {
-      flex: 1;
-      min-width: 40%;
+      width: 200px;
     }
     #searchBtn {
+      font-size: 18px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
       background-color: #8b5e3c;
       color: white;
-      padding: 10px 16px;
       cursor: pointer;
+      height: 46px;
     }
     #shareBtn, #formBtn {
       position: fixed;
@@ -119,9 +123,7 @@
       const size = zoom < 14 ? 20 : zoom < 16 ? 28 : 36;
       return L.divIcon({
         className: 'custom-icon',
-        html: `<div style="font-size:${size}px;">${genreIcons[genre] || '📍'}</div>`,
-        iconSize: [size, size],
-        iconAnchor: [size / 2, size / 2]
+        html: `<div style="font-size:${size}px;">${genreIcons[genre] || '📍'}</div>`
       });
     }
 
