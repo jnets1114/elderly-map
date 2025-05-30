@@ -9,7 +9,7 @@
   <style>
     body {
       font-family: "Hiragino Kaku Gothic ProN", sans-serif;
-      background: #fff8f0;
+      background: #fff8e1;
       margin: 0; padding: 0;
       font-size: 18px;
     }
@@ -23,15 +23,29 @@
       height: 80vh;
       width: 100%;
     }
-    #filterSelect, #searchInput {
-      display: block;
-      margin: 10px auto;
+    #filterSelect, #searchInput, #searchBtn {
       font-size: 18px;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      width: 90%;
-      max-width: 500px;
+    }
+    #filterSelect {
+      width: 48%;
+      margin: 10px 1% 10px 1%;
+      display: inline-block;
+    }
+    #searchInput {
+      width: 40%;
+      margin: 10px 1% 10px 1%;
+      display: inline-block;
+    }
+    #searchBtn {
+      background-color: #8b5e3c;
+      color: white;
+      width: 8%;
+      margin: 10px 1% 10px 0;
+      display: inline-block;
+      cursor: pointer;
     }
     #shareBtn, #formBtn {
       position: fixed;
@@ -51,9 +65,8 @@
       left: 20px;
       background: #2a9d8f;
     }
-    #shareBtn:hover, #formBtn:hover {
+    #shareBtn:hover, #formBtn:hover, #searchBtn:hover {
       opacity: 0.8;
-      cursor: pointer;
     }
   </style>
 </head>
@@ -63,6 +76,7 @@
     <option value="すべて">すべてのジャンル</option>
   </select>
   <input type="text" id="searchInput" placeholder="施設名で検索...">
+  <button id="searchBtn">検索</button>
   <div id="map"></div>
   <button id="shareBtn">人に教える</button>
   <button id="formBtn" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSdJKVbxWMm9fVfd4MfdzsI_jvGvy_5Wwb6WodXpfQFiF8tZBg/viewform?usp=header', '_blank')">情報を投稿する</button>
@@ -77,10 +91,10 @@
     }).addTo(map);
 
     const genreIcons = {
-      '医療機関': '🏥', '訪問看護ステーション': '🩺', '高齢者福祉施設': '🧓',
-      'デイサービス': '🚐', '福祉相談窓口': '📞', '介護タクシー': '🚖',
-      '買い物': '🛍', 'ドラッグストア・薬局': '💊', '公園': '🌳',
-      '猫カフェ': '🐱', '多目的トイレ': '🚻', '地区コミュニティセンター': '🏢', 'こども食堂': '🍽'
+      '医療機関': '🏥', '訪問看護ステーション': '🩺', '高齢者福祉施設': '🏡',
+      'デイサービス': '🚐', '福祉相談窓口': '📞', '介護タクシー': '🚕',
+      '買い物': '🛒', 'ドラッグストア・薬局': '💊', '公園': '🌲',
+      '猫カフェ': '🐾', '多目的トイレ': '🚻', '地区コミュニティセンター': '🏘', 'こども食堂': '🍴'
     };
 
     let allMarkers = [];
@@ -100,9 +114,9 @@
     function renderMarkers(markers) {
       markerGroup.clearLayers();
       markers.forEach(m => {
-        const icon = L.divIcon({ className: 'custom-icon', html: `<div style="font-size:24px;">${genreIcons[m.genre] || '📍'}</div>` });
+        const icon = L.divIcon({ className: 'custom-icon', html: `<div style="font-size:20px;">${genreIcons[m.genre] || '📍'}</div>` });
         const info = displayInfo(m.values);
-        const popup = `<div style='font-size:16px; line-height:1.6;'>
+        const popup = `<div style='font-size:16px; line-height:1.8;'>
           <strong style='font-size:18px;'>${m.name}</strong><br>
           <span style='color:gray;'>${m.genre}</span><br><br>
           <strong>住所：</strong>${info.address}<br>
@@ -125,10 +139,14 @@
       const keyword = document.getElementById('searchInput').value.trim();
       const result = allMarkers.filter(m => {
         const matchGenre = genre === 'すべて' || m.genre === genre;
-        const matchName = m.name.includes(keyword);
+        const matchName = keyword === '' || m.name.includes(keyword);
         return matchGenre && matchName;
       });
       renderMarkers(result);
+      if (result.length === 1) {
+        result[0].marker.openPopup();
+        map.setView([result[0].lat, result[0].lng], 16);
+      }
     }
 
     fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTzWbO0ClxE1SKe-w-3yy-Zik5MmSYrL5b2Vg5O9O04XC4e3WaPOuGqBKWNQNeKsaQ1J34W1VfxnVd8/pub?gid=675439036&single=true&output=csv')
@@ -155,7 +173,7 @@
         });
 
         document.getElementById('filterSelect').addEventListener('change', filterAndSearch);
-        document.getElementById('searchInput').addEventListener('input', filterAndSearch);
+        document.getElementById('searchBtn').addEventListener('click', filterAndSearch);
 
         renderMarkers(allMarkers);
       });
