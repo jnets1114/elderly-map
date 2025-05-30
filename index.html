@@ -119,7 +119,9 @@
       const size = zoom < 14 ? 20 : zoom < 16 ? 28 : 36;
       return L.divIcon({
         className: 'custom-icon',
-        html: `<div style="font-size:${size}px;">${genreIcons[genre] || '📍'}</div>`
+        html: `<div style="font-size:${size}px;">${genreIcons[genre] || '📍'}</div>`,
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2]
       });
     }
 
