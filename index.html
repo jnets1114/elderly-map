@@ -23,28 +23,33 @@
       height: 80vh;
       width: 100%;
     }
-    #filterSelect, #searchInput, #searchBtn {
+    .search-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 10px;
+    }
+    #filterSelect, #searchInput {
       font-size: 18px;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
+      margin: 5px;
     }
     #filterSelect {
-      width: 48%;
-      margin: 10px 1% 10px 1%;
-      display: inline-block;
+      width: 240px;
     }
     #searchInput {
-      width: 40%;
-      margin: 10px 1% 10px 1%;
-      display: inline-block;
+      width: 300px;
     }
     #searchBtn {
       background-color: #8b5e3c;
       color: white;
-      width: 8%;
-      margin: 10px 1% 10px 0;
-      display: inline-block;
+      padding: 10px 20px;
+      font-size: 18px;
+      border-radius: 8px;
+      border: none;
+      margin: 5px;
       cursor: pointer;
     }
     #shareBtn, #formBtn {
@@ -72,11 +77,13 @@
 </head>
 <body>
   <h2>日高地区 高齢者向け施設マップ</h2>
-  <select id="filterSelect">
-    <option value="すべて">すべてのジャンル</option>
-  </select>
-  <input type="text" id="searchInput" placeholder="施設名で検索...">
-  <button id="searchBtn">検索</button>
+  <div class="search-container">
+    <select id="filterSelect">
+      <option value="すべて">すべてのジャンル</option>
+    </select>
+    <input type="text" id="searchInput" placeholder="施設名で検索...">
+    <button id="searchBtn">検索</button>
+  </div>
   <div id="map"></div>
   <button id="shareBtn">人に教える</button>
   <button id="formBtn" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSdJKVbxWMm9fVfd4MfdzsI_jvGvy_5Wwb6WodXpfQFiF8tZBg/viewform?usp=header', '_blank')">情報を投稿する</button>
