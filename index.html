@@ -70,11 +70,6 @@
     #shareBtn:hover, #formBtn:hover, #searchBtn:hover {
       opacity: 0.8;
     }
-    .custom-icon {
-      text-align: center;
-      transform: translate(-50%, -50%);
-      white-space: nowrap;
-    }
   </style>
 </head>
 <body>
@@ -100,19 +95,10 @@
     }).addTo(map);
 
     const genreIcons = {
-      '医療機関': '➕',
-      '訪問看護ステーション': '💗',
-      '高齢者福祉施設': '🏠',
-      'デイサービス': '🚐',
-      '福祉相談窓口': '📞',
-      '介護タクシー': '🚕',
-      '買い物': '👜',
-      'ドラッグストア・薬局': '💊',
-      '公園': '🌲',
-      '猫カフェ': '🐱',
-      '多目的トイレ': '♿',
-      '地区コミュニティセンター': '🏛',
-      'こども食堂': '🍛'
+      '医療機関': '🏥', '訪問看護ステーション': '💗', '高齢者福祉施設': '🏠',
+      'デイサービス': '🚐', '福祉相談窓口': '📞', '介護タクシー': '🚕',
+      '買い物': '🛍️', 'ドラッグストア・薬局': '💊', '公園': '🌲',
+      '猫カフェ': '🐱', '多目的トイレ': '♿', '地区コミュニティセンター': '🏛️', 'こども食堂': '🍛'
     };
 
     let allMarkers = [];
@@ -129,14 +115,19 @@
       };
     }
 
+    function createIcon(genre, zoom) {
+      const size = zoom < 14 ? 20 : zoom < 16 ? 28 : 36;
+      return L.divIcon({
+        className: 'custom-icon',
+        html: `<div style="font-size:${size}px;">${genreIcons[genre] || '📍'}</div>`
+      });
+    }
+
     function renderMarkers(markers) {
       markerGroup.clearLayers();
       const zoom = map.getZoom();
-      const fontSize = Math.max(16, zoom * 2);
-
       markers.forEach(m => {
-        let iconHtml = `<div style="font-size:${fontSize}px;">${genreIcons[m.genre] || '📍'}</div>`;
-        const icon = L.divIcon({ className: 'custom-icon', html: iconHtml });
+        const icon = createIcon(m.genre, zoom);
         const info = displayInfo(m.values);
         const popup = `<div style='font-size:16px; line-height:1.8;'>
           <strong style='font-size:18px;'>${m.name}</strong><br>
@@ -171,6 +162,8 @@
       }
     }
 
+    map.on('zoomend', () => renderMarkers(allMarkers));
+
     fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTzWbO0ClxE1SKe-w-3yy-Zik5MmSYrL5b2Vg5O9O04XC4e3WaPOuGqBKWNQNeKsaQ1J34W1VfxnVd8/pub?gid=675439036&single=true&output=csv')
       .then(res => res.text())
       .then(csv => {
@@ -198,8 +191,6 @@
         document.getElementById('searchBtn').addEventListener('click', filterAndSearch);
 
         renderMarkers(allMarkers);
-
-        map.on('zoomend', () => renderMarkers(allMarkers));
       });
 
     document.getElementById('shareBtn').addEventListener('click', () => {
