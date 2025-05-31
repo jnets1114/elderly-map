@@ -20,47 +20,35 @@
       color: #5a3825;
     }
     #map {
-      height: 80vh;
+      height: 80vh !important;
       width: 100%;
+      display: block;
     }
     .input-group {
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
       align-items: center;
       gap: 10px;
-      flex-wrap: nowrap;
       margin: 10px;
-      padding: 0 10px;
     }
-    #filterSelect, #searchInput, #searchBtn {
+    #filterSelect, #searchInput {
       font-size: 18px;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
-    }
-    #filterSelect {
-      width: 35%;
-    }
-    #searchInput {
-      width: 45%;
+      flex: 1 1 auto;
+      min-width: 120px;
     }
     #searchBtn {
+      font-size: 18px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
       background-color: #8b5e3c;
       color: white;
-      padding: 10px 16px;
       cursor: pointer;
       white-space: nowrap;
-    }
-    @media (max-width: 768px) {
-      .input-group {
-        flex-wrap: wrap;
-      }
-      #filterSelect, #searchInput {
-        width: 100%;
-      }
-      #searchBtn {
-        width: 100%;
-      }
     }
     #shareBtn, #formBtn {
       position: fixed;
@@ -100,7 +88,123 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // ここはそのままでOK
+    document.addEventListener('DOMContentLoaded', () => {
+      const map = L.map('map', { zoomControl: false }).setView([35.467222, 134.771509], 14);
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      const genreIcons = {
+        '医療機関': '🏥', '訪問看護ステーション': '💗', '高齢者福祉施設': '🏠',
+        'デイサービス': '🚐', '福祉相談窓口': '📞', '介護タクシー': '🚕',
+        '買い物': '🛍️', 'ドラッグストア・薬局': '💊', '公園': '🌲',
+        '猫カフェ': '🐱', '多目的トイレ': '♿', '地区コミュニティセンター': '🏛️', 'こども食堂': '🍛'
+      };
+
+      let allMarkers = [];
+      let markerGroup = L.layerGroup().addTo(map);
+
+      function displayInfo(info) {
+        return {
+          address: info['住所'] || 'まだ情報がありません。',
+          tel: info['電話番号'] || 'まだ情報がありません。',
+          hours: info['営業時間'] || 'まだ情報がありません。',
+          closed: info['定休日'] || 'まだ情報がありません。',
+          homepage: info['ホームページ'] ? `<a href="${info['ホームページ']}" target="_blank">ホームページ</a>` : 'まだ情報がありません。',
+          comment: info['コメント'] || 'まだ情報がありません。'
+        };
+      }
+
+      function createIcon(genre, zoom) {
+        const size = zoom < 14 ? 20 : zoom < 16 ? 28 : 36;
+        return L.divIcon({
+          className: 'custom-icon',
+          html: `<div style="font-size:${size}px;">${genreIcons[genre] || '📍'}</div>`
+        });
+      }
+
+      function renderMarkers(markers) {
+        markerGroup.clearLayers();
+        const zoom = map.getZoom();
+        markers.forEach(m => {
+          const icon = createIcon(m.genre, zoom);
+          const info = displayInfo(m.values);
+          const popup = `<div style='font-size:16px; line-height:1.8;'>
+            <strong style='font-size:18px;'>${m.name}</strong><br>
+            <span style='color:gray;'>${m.genre}</span><br><br>
+            <strong>住所：</strong>${info.address}<br>
+            <strong>電話：</strong>${info.tel}<br>
+            <strong>営業時間：</strong>${info.hours}<br>
+            <strong>定休日：</strong>${info.closed}<br>
+            ${info.homepage}<br>
+            <strong>コメント：</strong>${info.comment}<br><br>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}&travelmode=walking" target="_blank">🚶 徒歩でナビ</a><br>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}&travelmode=driving" target="_blank">🚗 車でナビ</a>
+          </div>`;
+          const marker = L.marker([m.lat, m.lng], { icon }).bindPopup(popup);
+          marker.addTo(markerGroup);
+          m.marker = marker;
+        });
+      }
+
+      function filterAndSearch() {
+        const genre = document.getElementById('filterSelect').value;
+        const keyword = document.getElementById('searchInput').value.trim();
+        const result = allMarkers.filter(m => {
+          const matchGenre = genre === 'すべて' || m.genre === genre;
+          const matchName = keyword === '' || m.name.includes(keyword);
+          return matchGenre && matchName;
+        });
+        renderMarkers(result);
+        if (result.length === 1) {
+          result[0].marker.openPopup();
+          map.setView([result[0].lat, result[0].lng], 16);
+        }
+      }
+
+      map.on('zoomend', () => renderMarkers(allMarkers));
+
+      fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTzWbO0ClxE1SKe-w-3yy-Zik5MmSYrL5b2Vg5O9O04XC4e3WaPOuGqBKWNQNeKsaQ1J34W1VfxnVd8/pub?gid=675439036&single=true&output=csv')
+        .then(res => res.text())
+        .then(csv => {
+          const parsed = Papa.parse(csv, { header: true, skipEmptyLines: true });
+          const rows = parsed.data.filter(row => row['緯度（lat）'] && row['経度（lng）']);
+          const genreSet = new Set();
+
+          allMarkers = rows.map(row => {
+            const lat = parseFloat(row['緯度（lat）']);
+            const lng = parseFloat(row['経度（lng）']);
+            const genre = row['ジャンル'];
+            if (genre && genre.trim() !== '') genreSet.add(genre);
+            return { name: row['施設名'], genre, lat, lng, values: row };
+          }).filter(m => !isNaN(m.lat) && !isNaN(m.lng));
+
+          const select = document.getElementById('filterSelect');
+          genreSet.forEach(genre => {
+            const option = document.createElement('option');
+            option.value = genre;
+            option.textContent = `${genreIcons[genre] || '📍'} ${genre}`;
+            select.appendChild(option);
+          });
+
+          document.getElementById('filterSelect').addEventListener('change', filterAndSearch);
+          document.getElementById('searchBtn').addEventListener('click', filterAndSearch);
+
+          renderMarkers(allMarkers);
+        });
+
+      document.getElementById('shareBtn').addEventListener('click', () => {
+        const dummy = document.createElement('input');
+        dummy.value = window.location.href;
+        document.body.appendChild(dummy);
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+        alert('このページのリンクをコピーしました！');
+      });
+    });
   </script>
 </body>
 </html>
