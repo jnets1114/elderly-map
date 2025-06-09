@@ -150,7 +150,9 @@
 
           marker.on('click', () => {
             map.panTo(marker.getLatLng());
-            setTimeout(() => marker.openPopup(), 200);
+            map.once('moveend', () => {
+              marker.openPopup();
+            });
           });
 
           m.marker = marker;
@@ -171,7 +173,9 @@
         if (filteredMarkers.length === 1) {
           const m = filteredMarkers[0];
           map.setView([m.lat, m.lng], 16);
-          setTimeout(() => m.marker.openPopup(), 200);
+          map.once('moveend', () => {
+            m.marker.openPopup();
+          });
         } else if (filteredMarkers.length > 1) {
           const latLngs = filteredMarkers.map(m => L.latLng(m.lat, m.lng));
           const bounds = L.latLngBounds(latLngs);
