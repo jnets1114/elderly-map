@@ -84,12 +84,18 @@
             コメント: ${info.comment}
           </div>`;
 
-          const marker = L.marker([m.lat, m.lng], { icon }).bindPopup(popup);
-          marker.addTo(markerGroup);
+          const marker = L.marker([m.lat, m.lng], { icon }).addTo(markerGroup);
+          marker.bindPopup(popup);
 
-          marker.on('click', () => {
+          marker.on('click', (e) => {
             marker.openPopup();
-            setTimeout(() => map.panTo(marker.getLatLng()), 100);
+            setTimeout(() => {
+              if (map.getZoom() < 16) {
+                map.setView(marker.getLatLng(), 16);
+              } else {
+                map.panTo(marker.getLatLng());
+              }
+            }, 200);
           });
 
           m.marker = marker;
