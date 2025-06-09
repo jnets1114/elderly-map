@@ -91,10 +91,10 @@
             const target = marker.getLatLng();
             const currentZoom = map.getZoom();
             const zoom = currentZoom < 16 ? 16 : currentZoom;
-            map.once('moveend', () => {
+            setTimeout(() => {
+              map.setView(target, zoom, { animate: true });
               marker.openPopup();
-            });
-            map.panTo(target, { animate: true });
+            }, 150);
           });
 
           m.marker = marker;
@@ -114,10 +114,10 @@
 
         if (filteredMarkers.length === 1) {
           const m = filteredMarkers[0];
-          map.once('moveend', () => {
+          setTimeout(() => {
+            map.setView([m.lat, m.lng], 16);
             m.marker.openPopup();
-          });
-          map.setView([m.lat, m.lng], 16);
+          }, 150);
         } else if (filteredMarkers.length > 1) {
           const latLngs = filteredMarkers.map(m => L.latLng(m.lat, m.lng));
           map.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50] });
