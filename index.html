@@ -104,6 +104,7 @@
       };
 
       let allMarkers = [];
+      let filteredMarkers = []; // 現在のフィルター結果を保持
       let markerGroup = L.layerGroup().addTo(map);
 
       function displayInfo(info) {
@@ -152,19 +153,20 @@
       function filterAndSearch() {
         const genre = document.getElementById('filterSelect').value;
         const keyword = document.getElementById('searchInput').value.trim();
-        const result = allMarkers.filter(m => {
+        filteredMarkers = allMarkers.filter(m => {
           const matchGenre = genre === 'すべて' || m.genre === genre;
           const matchName = keyword === '' || m.name.includes(keyword);
           return matchGenre && matchName;
         });
-        renderMarkers(result);
-        if (result.length === 1) {
-          result[0].marker.openPopup();
-          map.setView([result[0].lat, result[0].lng], 16);
+        renderMarkers(filteredMarkers);
+        if (filteredMarkers.length === 1) {
+          filteredMarkers[0].marker.openPopup();
+          map.setView([filteredMarkers[0].lat, filteredMarkers[0].lng], 16);
         }
       }
 
-      map.on('zoomend', () => renderMarkers(allMarkers));
+      map.on('zoomend', () => renderMarkers(filteredMarkers));
+      map.on('moveend', () => renderMarkers(filteredMarkers));
 
       fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTzWbO0ClxE1SKe-w-3yy-Zik5MmSYrL5b2Vg5O9O04XC4e3WaPOuGqBKWNQNeKsaQ1J34W1VfxnVd8/pub?gid=675439036&single=true&output=csv')
         .then(res => res.text())
@@ -192,7 +194,9 @@
           document.getElementById('filterSelect').addEventListener('change', filterAndSearch);
           document.getElementById('searchBtn').addEventListener('click', filterAndSearch);
 
-          renderMarkers(allMarkers);
+          // 初期描画はすべてのマーカー
+          filteredMarkers = allMarkers;
+          renderMarkers(filteredMarkers);
         });
 
       document.getElementById('shareBtn').addEventListener('click', () => {
