@@ -104,17 +104,17 @@
       };
 
       let allMarkers = [];
-      let filteredMarkers = []; // 現在のフィルター結果を保持
+      let filteredMarkers = [];
       let markerGroup = L.layerGroup().addTo(map);
 
       function displayInfo(info) {
         return {
           address: info['住所'] || 'まだ情報がありません。',
           tel: info['電話番号'] || 'まだ情報がありません。',
-          hours: info['営業時間'] || 'まだ情報がありません。',
+          hours: info['開始時間'] || 'まだ情報がありません。',
           closed: info['定休日'] || 'まだ情報がありません。',
           homepage: info['ホームページ'] ? `<a href="${info['ホームページ']}" target="_blank">ホームページ</a>` : 'まだ情報がありません。',
-          comment: info['コメント'] || 'まだ情報がありません。'
+          comment: info['一口コメント'] || 'まだ情報がありません。'
         };
       }
 
@@ -144,7 +144,15 @@
             <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}&travelmode=walking" target="_blank">🚶 徒歩でナビ</a><br>
             <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}&travelmode=driving" target="_blank">🚗 車でナビ</a>
           </div>`;
+
           const marker = L.marker([m.lat, m.lng], { icon }).bindPopup(popup);
+
+          // ✅ 追加：クリック時に中心に移動してポップアップ表示
+          marker.on('click', () => {
+            map.panTo([m.lat, m.lng]);
+            marker.openPopup();
+          });
+
           marker.addTo(markerGroup);
           m.marker = marker;
         });
@@ -159,10 +167,6 @@
           return matchGenre && matchName;
         });
         renderMarkers(filteredMarkers);
-        if (filteredMarkers.length === 1) {
-          filteredMarkers[0].marker.openPopup();
-          map.setView([filteredMarkers[0].lat, filteredMarkers[0].lng], 16);
-        }
       }
 
       map.on('zoomend', () => renderMarkers(filteredMarkers));
@@ -194,7 +198,6 @@
           document.getElementById('filterSelect').addEventListener('change', filterAndSearch);
           document.getElementById('searchBtn').addEventListener('click', filterAndSearch);
 
-          // 初期描画はすべてのマーカー
           filteredMarkers = allMarkers;
           renderMarkers(filteredMarkers);
         });
