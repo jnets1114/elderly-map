@@ -147,9 +147,10 @@
 
           const marker = L.marker([m.lat, m.lng], { icon }).bindPopup(popup);
 
-          // ✅ 修正：クリックしたらマップをその位置に移動（ズーム維持）、ポップアップは自動表示
+          // ✅ 改良ポイント：クリックしたら中心に移動＆ポップアップを表示
           marker.on('click', () => {
             map.panTo(marker.getLatLng());
+            marker.openPopup();
           });
 
           marker.addTo(markerGroup);
