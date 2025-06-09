@@ -92,9 +92,7 @@
             const currentZoom = map.getZoom();
             const zoom = currentZoom < 16 ? 16 : currentZoom;
             map.setView(target, zoom, { animate: true });
-            map.once('moveend', () => {
-              marker.openPopup();
-            });
+            setTimeout(() => marker.openPopup(), 300);
           });
 
           m.marker = marker;
@@ -115,9 +113,7 @@
         if (filteredMarkers.length === 1) {
           const m = filteredMarkers[0];
           map.setView([m.lat, m.lng], 16);
-          map.once('moveend', () => {
-            m.marker.openPopup();
-          });
+          setTimeout(() => m.marker.openPopup(), 300);
         } else if (filteredMarkers.length > 1) {
           const latLngs = filteredMarkers.map(m => L.latLng(m.lat, m.lng));
           map.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50] });
@@ -125,7 +121,6 @@
       }
 
       map.on('zoomend', () => renderMarkers(filteredMarkers));
-      map.on('moveend', () => renderMarkers(filteredMarkers));
 
       fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTzWbO0ClxE1SKe-w-3yy-Zik5MmSYrL5b2Vg5O9O04XC4e3WaPOuGqBKWNQNeKsaQ1J34W1VfxnVd8/pub?gid=675439036&single=true&output=csv')
         .then(res => res.text())
