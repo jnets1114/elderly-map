@@ -87,15 +87,14 @@
           const marker = L.marker([m.lat, m.lng], { icon }).addTo(markerGroup);
           marker.bindPopup(popup);
 
-          marker.on('click', (e) => {
-            marker.openPopup();
-            setTimeout(() => {
-              if (map.getZoom() < 16) {
-                map.setView(marker.getLatLng(), 16);
-              } else {
-                map.panTo(marker.getLatLng());
-              }
-            }, 200);
+          marker.on('click', () => {
+            const target = marker.getLatLng();
+            const currentZoom = map.getZoom();
+            const zoom = currentZoom < 16 ? 16 : currentZoom;
+            map.setView(target, zoom, { animate: true });
+            map.once('moveend', () => {
+              marker.openPopup();
+            });
           });
 
           m.marker = marker;
@@ -116,7 +115,9 @@
         if (filteredMarkers.length === 1) {
           const m = filteredMarkers[0];
           map.setView([m.lat, m.lng], 16);
-          setTimeout(() => m.marker.openPopup(), 300);
+          map.once('moveend', () => {
+            m.marker.openPopup();
+          });
         } else if (filteredMarkers.length > 1) {
           const latLngs = filteredMarkers.map(m => L.latLng(m.lat, m.lng));
           map.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50] });
