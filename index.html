@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>日高地区 生活支援マップ</title>
+  <title>日高地区 高齢者向け施設マップ</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
@@ -74,7 +74,7 @@
   </style>
 </head>
 <body>
-  <h2>日高地区 生活支援マップ</h2>
+  <h2>日高地区 高齢者向け施設マップ</h2>
   <div class="input-group">
     <select id="filterSelect">
       <option value="すべて">すべてのジャンル</option>
@@ -164,7 +164,7 @@
         }
       }
 
-      map.on('zoomend', () => renderMarkers(allMarkers));
+      map.on('zoomend', () => renderMarkers(filteredMarkers));
 
       fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTzWbO0ClxE1SKe-w-3yy-Zik5MmSYrL5b2Vg5O9O04XC4e3WaPOuGqBKWNQNeKsaQ1J34W1VfxnVd8/pub?gid=675439036&single=true&output=csv')
         .then(res => res.text())
